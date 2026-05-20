@@ -1,0 +1,62 @@
+<div class="ticket-container">
+  <div class="ticket-card">
+    <div class="ticket-header">
+      <div class="success-icon">✅</div>
+      <h1>¡Compra Exitosa!</h1>
+      <p>Gracias por tu pedido, <strong>{{ticket.purchaser}}</strong></p>
+    </div>
+
+    <div class="ticket-body">
+      <div class="ticket-row">
+        <span>Código de Orden:</span>
+        <strong>#{{ticket.code}}</strong>
+      </div>
+      <div class="ticket-row">
+        <span>Fecha de Compra:</span>
+        <div class="text-right">
+          <strong>{{ticket.purchase_datetime}}</strong>
+        </div>
+      </div>
+
+      <div class="ticket-items">
+        <h4>Detalle de Productos</h4>
+        {{#each ticket.products}}
+        <div class="ticket-item">
+          <span>{{this.title}} (x{{this.quantity}})</span>
+          <span>{{currency (multiply this.price this.quantity)}}</span>
+        </div>
+        {{/each}}
+      </div>
+
+      <hr />
+      <div class="ticket-row total">
+        <span>Total Pagado:</span>
+        <span class="total-amount">{{currency ticket.amount}}</span>
+      </div>
+    </div>
+
+    {{#if outOfStock.length}}
+      <div class="out-of-stock-notice">
+        <h4>⚠️ Atención</h4>
+        <p>Algunos productos no pudieron ser procesados por falta de stock y quedaron en tu carrito.</p>
+      </div>
+    {{/if}}
+
+    <div class="ticket-footer">
+      <a href="/products" class="btn btn-primary btn-block">Volver a la Tienda</a>
+    </div>
+  </div>
+</div>
+
+<style>
+.ticket-container { display: flex; justify-content: center; align-items: center; min-height: 80vh; padding: 2rem; }
+.ticket-card { background: #fff; width: 100%; max-width: 500px; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); overflow: hidden; }
+.ticket-header { background: var(--primary); color: #fff; text-align: center; padding: 3rem 2rem 2rem; }
+.success-icon { font-size: 4rem; margin-bottom: 1rem; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.2)); }
+.ticket-header h1 { margin-bottom: 0.5rem; font-size: 1.8rem; }
+.ticket-body { padding: 2rem; }
+.ticket-row { display: flex; justify-content: space-between; margin-bottom: 1rem; font-size: 1.1rem; }
+.ticket-total { display: flex; justify-content: space-between; font-size: 1.4rem; font-weight: bold; margin-top: 1rem; }
+.out-of-stock-notice { background: #fff3cd; color: #856404; padding: 1rem 2rem; margin: 0 2rem; border-radius: 8px; font-size: 0.9rem; }
+.ticket-footer { padding: 2rem; text-align: center; }
+</style>

@@ -1,0 +1,71 @@
+<div class="verdemarket-layout single-column">
+  <!-- Barra de Categorías Horizontal -->
+  <nav class="category-navbar">
+    <div class="category-scroll">
+      <a href="/products" class="{{#if (eq query '')}}active{{/if}}">Todas</a>
+      <a href="/products?query=Almacén" class="{{#if (eq query 'Almacén')}}active{{/if}}">Almacén</a>
+      <a href="/products?query=Lácteos" class="{{#if (eq query 'Lácteos')}}active{{/if}}">Lácteos</a>
+      <a href="/products?query=Carnes" class="{{#if (eq query 'Carnes')}}active{{/if}}">Carnes</a>
+      <a href="/products?query=Frutas y Verduras" class="{{#if (eq query 'Frutas y Verduras')}}active{{/if}}">Frutas y Verduras</a>
+      <a href="/products?query=Panadería" class="{{#if (eq query 'Panadería')}}active{{/if}}">Panadería</a>
+      <a href="/products?query=Embutidos" class="{{#if (eq query 'Embutidos')}}active{{/if}}">Embutidos</a>
+      <a href="/products?query=Tecnología" class="{{#if (eq query 'Tecnología')}}active{{/if}}">Tecnología</a>
+      <a href="/products?query=Belleza" class="{{#if (eq query 'Belleza')}}active{{/if}}">Belleza</a>
+      <a href="/products?query=Medicamentos" class="{{#if (eq query 'Medicamentos')}}active{{/if}}">Medicamentos</a>
+    </div>
+  </nav>
+
+  <!-- Contenido Principal -->
+  <main class="main-catalog">
+    <div class="page-header">
+      <h1>📦 Catálogo de Productos</h1>
+      <p class="subtitle">Página {{pagination.page}} de {{pagination.totalPages}}</p>
+    </div>
+
+    <form class="filters" method="GET" action="/products">
+      <input type="hidden" name="query" value="{{query}}" />
+      <select name="sort" onchange="this.form.submit()">
+        <option value="">Ordenar por...</option>
+        <option value="asc" {{#if (eq sort 'asc')}}selected{{/if}}>Precio: Menor a Mayor</option>
+        <option value="desc" {{#if (eq sort 'desc')}}selected{{/if}}>Precio: Mayor a Menor</option>
+      </select>
+    </form>
+
+    <div class="product-grid" id="productList">
+      {{#each products}}
+        <div class="product-card borderless" data-id="{{_id}}">
+          <div class="img-wrapper">
+            {{#if thumbnails.[0]}}
+              <img src="{{thumbnails.[0]}}" alt="{{title}}" class="product-img" />
+            {{else}}
+              <img src="https://placehold.co/400x400/f8f9fa/a3a3a3?text=Sin+Imagen" alt="Sin imagen" class="product-img" />
+            {{/if}}
+          </div>
+          <div class="product-info">
+            <span class="category-tag">{{category}}</span>
+            <h3>{{title}}</h3>
+            <p class="price">{{currency price}}</p>
+          </div>
+          <div class="product-actions-hover">
+            <a href="/products/{{_id}}" class="btn btn-primary btn-block">Ver Detalle</a>
+          </div>
+        </div>
+      {{else}}
+        <div class="empty-state">
+          <div class="empty-icon">🛒</div>
+          <p class="text-muted">No se encontraron productos en esta categoría.</p>
+        </div>
+      {{/each}}
+    </div>
+
+    <div class="pagination">
+      {{#if pagination.hasPrevPage}}
+        <a href="{{pagination.prevLink}}" class="btn">← Anterior</a>
+      {{/if}}
+      <span>{{pagination.page}} / {{pagination.totalPages}}</span>
+      {{#if pagination.hasNextPage}}
+        <a href="{{pagination.nextLink}}" class="btn">Siguiente →</a>
+      {{/if}}
+    </div>
+  </main>
+</div>

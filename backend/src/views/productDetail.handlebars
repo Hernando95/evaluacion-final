@@ -1,0 +1,78 @@
+<div class="detail-container">
+  <a href="/products" class="btn btn-secondary">← Volver</a>
+
+  <div class="detail-card">
+    {{#if product.thumbnails.[0]}}
+      <img src="{{product.thumbnails.[0]}}" alt="{{product.title}}" class="detail-img" />
+    {{else}}
+      <img src="https://placehold.co/600x600/f8f9fa/a3a3a3?text=Sin+Imagen" alt="Sin imagen" class="detail-img" />
+    {{/if}}
+
+    <div class="detail-info">
+      <span class="badge">{{product.category}}</span>
+      <h1>{{product.title}}</h1>
+      <p class="description">{{product.description}}</p>
+      <p class="price">{{currency product.price}}</p>
+      <p class="stock">{{product.stock}} unidades disponibles</p>
+      <p class="code">Código: <strong>{{product.code}}</strong></p>
+
+      <div class="add-to-cart">
+        <div class="quantity-selector">
+          <button class="qty-btn" onclick="changeQty(-1)">-</button>
+          <input id="productQty" type="number" value="1" min="1" readonly />
+          <button class="qty-btn" onclick="changeQty(1)">+</button>
+        </div>
+        <button class="btn btn-primary" onclick="addToCart('{{product._id}}')">
+          🛒 Agregar al carrito
+        </button>
+        <p id="cartMsg" class="cart-msg"></p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function changeQty(delta) {
+  const input = document.getElementById('productQty');
+  let val = parseInt(input.value) + delta;
+  if (val < 1) val = 1;
+  input.value = val;
+}
+
+async function addToCart(productId) {
+  const quantity = parseInt(document.getElementById('productQty').value);
+  const msg = document.getElementById('cartMsg');
+  
+  // Obtener cartId del localStorage (manejado en main.js)
+  const cartId = localStorage.getItem('cartId');
+  if (!cartId) { 
+    msg.textContent = '❌ Error: No se pudo inicializar el carrito'; 
+    return; 
+  }
+
+  try {
+    const res = await fetch(`/api/carts/${cartId}/products/${productId}`, { 
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ quantity })
+    });
+    
+    if (res.status === 404) {
+      localStorage.removeItem('cartId');
+      alert('Tu sesión de carrito expiró. Recargando para crear uno nuevo...');
+      location.reload();
+      return;
+    }
+
+    const data = await res.json();
+    if (data.status === 'success') {
+      showToast('Producto agregado al carrito');
+      if (typeof updateCartBadge === 'function') updateCartBadge();
+    } else {
+      showToast(data.error, 'error');
+    }
+  } catch {
+    showToast('Error de red al agregar al carrito', 'error');
+  }
+}
+</script>

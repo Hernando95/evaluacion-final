@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Supermercado E-Commerce</title>
+    <link rel="stylesheet" href="/css/styles.css" />
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+  </head>
+  <body>
+    <header class="navbar">
+      <div class="nav-left">
+        <button id="menuBtn" class="icon-btn mobile-only">
+          <i data-lucide="menu"></i>
+        </button>
+        <a href="/products" class="brand">🛒 VerdeMarket</a>
+      </div>
+      <div class="nav-right">
+        <div class="desktop-only nav-actions">
+          {{#if user}}
+            <span class="user-greeting">Hola, <strong>{{user.name}}</strong></span>
+            {{#if (eq user.role 'admin')}}
+              <a href="/admin/products" class="btn btn-sm btn-outline-dark">Panel Admin</a>
+            {{/if}}
+            <form action="/api/sessions/logout" method="POST" style="margin: 0;">
+              <button type="submit" class="btn btn-sm btn-secondary">Salir</button>
+            </form>
+          {{else}}
+            <a href="/login" class="btn btn-primary">Entrar</a>
+          {{/if}}
+        </div>
+        <a href="#" id="cartLink" class="icon-btn cart-btn">
+          <i data-lucide="shopping-cart"></i>
+          <span id="cartCount" class="badge">0</span>
+        </a>
+      </div>
+    </header>
+
+    <!-- Side Drawer for Mobile -->
+    <aside id="sideDrawer" class="sidebar">
+      <div class="sidebar-header">
+        <span class="brand">🛒 VerdeMarket</span>
+        <button id="closeDrawer" class="icon-btn">
+          <i data-lucide="x"></i>
+        </button>
+      </div>
+      <div class="sidebar-content">
+        {{#if user}}
+          <div class="drawer-user">
+            <p>Conectado como:</p>
+            <h3>{{user.name}}</h3>
+            <span class="badge-role">{{user.role}}</span>
+          </div>
+          <nav class="drawer-nav">
+            {{#if (eq user.role 'admin')}}
+              <a href="/admin/products"><i data-lucide="settings"></i> Panel Administrador</a>
+            {{/if}}
+            <a href="/products"><i data-lucide="shopping-bag"></i> Catálogo</a>
+            <form action="/api/sessions/logout" method="POST">
+              <button type="submit" class="drawer-logout"><i data-lucide="log-out"></i> Cerrar Sesión</button>
+            </form>
+          </nav>
+        {{else}}
+          <nav class="drawer-nav">
+            <a href="/login"><i data-lucide="log-in"></i> Iniciar Sesión</a>
+            <a href="/products"><i data-lucide="shopping-bag"></i> Ver Productos</a>
+          </nav>
+        {{/if}}
+      </div>
+    </aside>
+    <div id="drawerOverlay" class="overlay"></div>
+
+    <main class="container">
+      {{{body}}}
+    </main>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/js/main.js"></script>
+    <script>
+      lucide.createIcons();
+    </script>
+  </body>
+</html>

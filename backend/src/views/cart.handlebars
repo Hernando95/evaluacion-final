@@ -1,0 +1,167 @@
+<div class="cart-page">
+  <div class="page-header">
+    <h1>🛒 Tu Carrito</h1>
+    <p class="subtitle">Gestioná tus productos antes de finalizar la compra.</p>
+  </div>
+
+  {{#if cart.products.length}}
+    <div class="cart-layout">
+      <!-- Tabla de Productos -->
+      <div class="cart-items-container">
+        <table class="cart-table modern-table">
+          <thead>
+            <tr>
+              <th>Producto</th>
+              <th>Precio</th>
+              <th>Cantidad</th>
+              <th>Subtotal</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {{#each cart.products}}
+              {{#if product}}
+              <tr data-id="{{product._id}}">
+                <td>
+                  <div class="cart-product-info">
+                    {{#if product.thumbnails.[0]}}
+                      <img src="{{product.thumbnails.[0]}}" alt="{{product.title}}" class="product-img-mini" />
+                    {{else}}
+                      <img src="https://placehold.co/100x100/f8f9fa/a3a3a3?text=Sin+Imagen" alt="Sin imagen" class="product-img-mini" />
+                    {{/if}}
+                    <div>
+                      <strong>{{product.title}}</strong><br />
+                      <span class="badge badge-light">{{product.category}}</span>
+                    </div>
+                  </div>
+                </td>
+                <td class="price-cell">{{currency product.price}}</td>
+                <td>
+                  <div class="quantity-selector modern-qty">
+                    <button class="qty-btn" onclick="updateQty('{{../cart._id}}', '{{product._id}}', -1)">-</button>
+                    <input type="number" value="{{quantity}}" readonly />
+                    <button class="qty-btn" onclick="updateQty('{{../cart._id}}', '{{product._id}}', 1)">+</button>
+                  </div>
+                </td>
+                <td class="subtotal-cell fw-bold">{{subtotal product.price quantity}}</td>
+                <td class="action-cell">
+                  <button class="btn btn-icon text-danger" onclick="removeItem('{{../cart._id}}', '{{product._id}}')" title="Eliminar producto">
+                    <i data-lucide="trash-2"></i>
+                  </button>
+                </td>
+              </tr>
+              {{/if}}
+            {{/each}}
+          </tbody>
+        </table>
+        <div class="cart-actions-left">
+          <button class="btn btn-outline-danger" onclick="clearCart('{{cart._id}}')">
+            <i data-lucide="trash"></i> Vaciar Carrito
+          </button>
+        </div>
+      </div>
+
+      <!-- Resumen de Compra -->
+      <div class="cart-summary">
+        <h3>Resumen de Compra</h3>
+        <div class="summary-details">
+          <div class="summary-row">
+            <span>Subtotal</span>
+            <span class="fw-bold" id="cart-total-display">{{currency cartTotal}}</span>
+          </div>
+          <div class="summary-row">
+            <span>Envío</span>
+            <span class="text-success">¡Gratis!</span>
+          </div>
+          <hr>
+          <div class="summary-row total-row">
+            <span>Total</span>
+            <span class="fw-bold fs-4" id="cart-final-display">{{currency cartTotal}}</span>
+          </div>
+
+        </div>
+        <button class="btn btn-primary btn-block btn-lg mt-4" onclick="checkout('{{cart._id}}')">Ir al Pago <i data-lucide="arrow-right"></i></button>
+        <a href="/products" class="btn btn-link btn-block text-center mt-2">Seguir Comprando</a>
+      </div>
+    </div>
+  {{else}}
+    <div class="empty-state text-center mt-5">
+      <div class="empty-icon">🛒</div>
+      <h2>Tu carrito está vacío</h2>
+      <p class="text-muted">Parece que aún no agregaste nada a tu carrito.</p>
+      <a href="/products" class="btn btn-primary mt-3">Descubrir Productos</a>
+    </div>
+  {{/if}}
+</div>
+
+<script>
+async function updateQty(cartId, productId, delta) {
+  const input = event.target.parentElement.querySelector('input');
+  let newQty = parseInt(input.value) + delta;
+  if (newQty < 1) return;
+
+  try {
+    const res = await fetch(`/api/carts/${cartId}/products/${productId}`, { 
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ quantity: newQty })
+    });
+    if (res.ok) {
+      location.reload();
+    }
+  } catch (err) {
+    showToast('Error al actualizar cantidad', 'error');
+  }
+}
+
+async function removeItem(cartId, productId) {
+  if (!confirm('¿Seguro que querés eliminar este producto?')) return;
+  try {
+    const res = await fetch(`/api/carts/${cartId}/products/${productId}`, { method: 'DELETE' });
+    if (res.ok) {
+      showToast('Producto eliminado');
+      setTimeout(() => location.reload(), 500);
+    }
+  } catch (err) {
+    showToast('Error al eliminar producto', 'error');
+  }
+}
+
+async function clearCart(cartId) {
+  if (!confirm('¿Seguro que querés vaciar el carrito?')) return;
+  try {
+    const res = await fetch(`/api/carts/${cartId}`, { method: 'DELETE' });
+    if (res.ok) {
+      showToast('Carrito vaciado');
+      setTimeout(() => location.reload(), 500);
+    }
+  } catch (err) {
+    showToast('Error al vaciar carrito', 'error');
+  }
+}
+
+async function checkout(cartId) {
+  try {
+    const res = await fetch(`/api/carts/${cartId}/purchase`, {
+      method: 'POST'
+    });
+    const data = await res.json();
+        
+    if (data.status === 'success') {
+      showToast('¡Compra exitosa! Generando factura...', 'success');
+      
+      const outOfStock = data.payload.outOfStock || [];
+      const qs = outOfStock.length ? `?outOfStock=${outOfStock.join(',')}` : '';
+      
+      localStorage.removeItem('cartId');
+      setTimeout(() => {
+        window.location.href = `/ticket/${data.payload.ticket.code}${qs}`;
+      }, 1500);
+    } else {
+      showToast(data.error, 'error');
+    }
+  } catch (err) {
+    showToast('Ocurrió un error al procesar el pago', 'error');
+  }
+}
+</script>

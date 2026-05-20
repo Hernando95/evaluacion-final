@@ -1,0 +1,187 @@
+<div class="admin-container">
+  <div class="page-header">
+    <h1>⚙️ Panel de Administrador</h1>
+    <p class="subtitle">Gestión de Productos de la VerdeMarket</p>
+  </div>
+
+  <div class="admin-layout">
+    <div class="admin-form-card">
+      <h3>➕ Agregar Nuevo Producto</h3>
+      <form id="addProductForm">
+        <div class="form-group">
+          <label>Título</label>
+          <input type="text" id="title" required placeholder="Ej: Manzana Roja" />
+        </div>
+        <div class="form-group">
+          <label>Descripción</label>
+          <textarea id="description" required placeholder="Descripción del producto..."></textarea>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Código (SKU)</label>
+            <input type="text" id="code" required placeholder="Ej: FRU-001" />
+          </div>
+          <div class="form-group">
+            <label>Precio ($)</label>
+            <input type="number" id="price" required min="1" />
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Stock</label>
+            <input type="number" id="stock" required min="0" />
+          </div>
+          <div class="form-group">
+            <label>Categoría</label>
+            <select id="category" required>
+              <option value="Almacén">Almacén</option>
+              <option value="Lácteos">Lácteos</option>
+              <option value="Carnes">Carnes</option>
+              <option value="Frutas y Verduras">Frutas y Verduras</option>
+              <option value="Panadería">Panadería</option>
+              <option value="Embutidos">Embutidos</option>
+              <option value="Tecnología">Tecnología</option>
+              <option value="Belleza">Belleza</option>
+              <option value="Medicamentos">Medicamentos</option>
+            </select>
+          </div>
+        </div>
+        <button type="submit" class="btn btn-primary btn-block mt-4">Guardar Producto</button>
+        <p id="formMsg" class="mt-2 text-center"></p>
+      </form>
+    </div>
+
+    <div class="admin-list-card">
+      <h3>📦 Productos Existentes</h3>
+      <div class="admin-products-list">
+        {{#each products}}
+          <div class="admin-product-item" id="prod-{{this._id}}">
+            <div class="admin-prod-info">
+              <div class="title-row">
+                <strong>{{this.title}}</strong>
+                <span class="badge">{{this.category}}</span>
+              </div>
+              <p class="text-muted text-sm">SKU: {{this.code}} | {{currency this.price}}</p>
+              
+              <div class="stock-manager mt-2">
+                <span class="stock-label">Stock: <strong id="stock-val-{{this._id}}">{{this.stock}}</strong></span>
+                <div class="quick-stock-form">
+                  <input type="number" id="quick-stock-{{this._id}}" placeholder="+/-" class="stock-input" />
+                  <button class="btn btn-sm btn-dark" onclick="updateStock('{{this._id}}')">Sumar</button>
+                </div>
+              </div>
+            </div>
+            
+            <div class="admin-actions">
+              <button class="btn-icon text-danger" onclick="deleteProduct('{{this._id}}')" title="Eliminar">
+                <i data-lucide="trash-2"></i>
+              </button>
+            </div>
+          </div>
+        {{else}}
+          <p class="empty">No hay productos en la base de datos.</p>
+        {{/each}}
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+.admin-container { padding: 2rem 0; }
+.admin-layout { display: grid; grid-template-columns: 1fr 1.5fr; gap: 2rem; align-items: start; }
+.admin-form-card, .admin-list-card { background: #fff; padding: 2rem; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid var(--border-color); }
+.form-group { margin-bottom: 1rem; display: flex; flex-direction: column; }
+.form-group label { margin-bottom: 0.5rem; font-weight: 500; font-size: 0.9rem; }
+.form-group input, .form-group textarea, .form-group select { padding: 0.8rem; border: 1px solid #dee2e6; border-radius: 8px; font-family: inherit; transition: border-color 0.2s; }
+.form-group input:focus { border-color: var(--primary); outline: none; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+.admin-products-list { display: flex; flex-direction: column; gap: 1rem; max-height: 700px; overflow-y: auto; padding-right: 0.5rem; }
+.admin-product-item { display: flex; justify-content: space-between; align-items: flex-start; padding: 1.2rem; border: 1px solid #eee; border-radius: 12px; background: #fff; transition: all 0.2s; }
+.admin-product-item:hover { border-color: var(--primary); box-shadow: 0 4px 12px rgba(0,0,0,0.03); }
+.title-row { display: flex; align-items: center; gap: 0.8rem; margin-bottom: 0.3rem; }
+.admin-prod-info { flex: 1; }
+.text-sm { font-size: 0.85rem; }
+.stock-manager { display: flex; align-items: center; gap: 1.5rem; background: var(--bg-color); padding: 0.6rem 1rem; border-radius: 8px; margin-top: 0.8rem; }
+.stock-label { font-size: 0.9rem; }
+.quick-stock-form { display: flex; align-items: center; gap: 0.5rem; }
+.stock-input { width: 70px; padding: 0.4rem; border: 1px solid #ddd; border-radius: 6px; text-align: center; }
+.admin-actions { padding-top: 0.5rem; }
+@media(max-width: 992px) { .admin-layout { grid-template-columns: 1fr; } }
+</style>
+
+<script>
+document.getElementById('addProductForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const payload = {
+    title: document.getElementById('title').value,
+    description: document.getElementById('description').value,
+    code: document.getElementById('code').value,
+    price: Number(document.getElementById('price').value),
+    stock: Number(document.getElementById('stock').value),
+    category: document.getElementById('category').value,
+    thumbnails: []
+  };
+
+  try {
+    const res = await fetch('/api/products', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+    if(data.status === 'success') {
+      showToast('Producto agregado con éxito', 'success');
+      setTimeout(() => location.reload(), 1000);
+    } else {
+      showToast(data.error, 'error');
+    }
+  } catch(err) {
+    showToast('Error de red al agregar producto', 'error');
+  }
+});
+
+async function updateStock(pid) {
+  const input = document.getElementById('quick-stock-' + pid);
+  const addVal = parseInt(input.value);
+  if (isNaN(addVal)) return showToast('Ingresá una cantidad válida', 'error');
+
+  const currentStock = parseInt(document.getElementById('stock-val-' + pid).innerText);
+  const newStock = currentStock + addVal;
+
+  if (newStock < 0) return showToast('El stock no puede ser negativo', 'error');
+
+  try {
+    const res = await fetch('/api/products/' + pid, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ stock: newStock })
+    });
+    const data = await res.json();
+    if (data.status === 'success') {
+      document.getElementById('stock-val-' + pid).innerText = newStock;
+      input.value = '';
+      showToast('Stock actualizado correctamente', 'success');
+    } else {
+      showToast(data.error, 'error');
+    }
+  } catch (err) {
+    showToast('Error al actualizar el stock', 'error');
+  }
+}
+
+async function deleteProduct(pid) {
+  if(!confirm('¿Seguro que querés eliminar este producto?')) return;
+  try {
+    const res = await fetch('/api/products/' + pid, { method: 'DELETE' });
+    const data = await res.json();
+    if(data.status === 'success') {
+      showToast('Producto eliminado', 'success');
+      document.getElementById('prod-' + pid).remove();
+    } else {
+      showToast(data.error, 'error');
+    }
+  } catch(err) {
+    showToast('Error al eliminar producto', 'error');
+  }
+}
+</script>
